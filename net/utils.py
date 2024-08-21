@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn as nn
 import numpy as np
-from skimage.measure.simple_metrics import compare_psnr
+from skimage.metrics.simple_metrics import peak_signal_noise_ratio as psnr
 from torchvision import models
 
 

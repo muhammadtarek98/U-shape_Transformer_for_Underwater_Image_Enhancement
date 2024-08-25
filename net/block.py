@@ -159,7 +159,7 @@ class _equalized_deconv2d(th.nn.Module):
         if self.use_bias:
             self.bias = th.nn.Parameter(th.FloatTensor(c_out).fill_(0))
 
-        fan_in = c_in  # value of fan_in for deconv
+        fan_in = c_in  # value of fan_in for deconvolution_block
         self.scale = sqrt(2) / sqrt(fan_in)
 
     def forward(self, x):

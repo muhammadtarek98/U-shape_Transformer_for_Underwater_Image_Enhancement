@@ -110,8 +110,8 @@ class Generator(nn.Module):
 		if self.conv_patch_representation:
 
 			self.Conv_x = nn.Conv2d(
-				256,
-				self.embedding_dim,  #512
+				in_channels=256,
+				out_channels=self.embedding_dim,  #512
 				kernel_size=3,
 				stride=1,
 				padding=1
@@ -168,7 +168,7 @@ class Generator(nn.Module):
 		self.Up_conv2 = conv_block(64, 32)
 		self.Up_conv2_1 = conv_block(32, 32)
 
-		self.Conv = nn.Conv2d(32, self.out_ch, kernel_size=1, stride=1, padding=0)
+		self.Conv = nn.Conv2d(in_channels=32,out_channels= self.out_ch, kernel_size=1, stride=1, padding=0)
 
 		# self.active = torch.nn.Sigmoid()
 		# 

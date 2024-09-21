@@ -4,23 +4,18 @@
 # coding=utf-8
 # Design based on the pix2pix
 
-import torch.nn as nn
-import torch.nn.functional as F 
 import torch
 import datetime
 import os
 import time
 import timeit
 import copy
-import numpy as np 
-from torch.nn import ModuleList
-from torch.nn import Conv2d
-from torch.nn import LeakyReLU
-from net.block import *
-from net.block import _equalized_conv2d
-from net.SGFMT import TransformerModel
-from net.PositionalEncoding import FixedPositionalEncoding,LearnedPositionalEncoding
-from net.CMSFFT import ChannelTransformer
+import numpy as np
+from block import *
+from block import _equalized_conv2d
+from SGFMT import TransformerModel
+from PositionalEncoding import FixedPositionalEncoding,LearnedPositionalEncoding
+from CMSFFT import ChannelTransformer
 
 
 

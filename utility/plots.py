@@ -1,6 +1,3 @@
-import matplotlib
-if __name__ != "__main__":
-    matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -60,7 +57,6 @@ def plots_from_test_image(im, height, width, rgbonly=False):
 
 def _main():
     data = np.outer(np.arange(3, 10), np.arange(11)) / 60.0
-    # data = np.random.rand(7, 10)
     im = make_plots(data, 256, 256)
     print(im.shape, im.dtype)
     plt.imshow(im)

@@ -24,10 +24,6 @@ tensor([6.1062,  9.3593,  5.2129])
 """
 
 import torch
-from PIL import Image
-from torchvision import transforms, utils
-import os,sys
-import numpy as np
 
 
 # Helper for the creation of module-global constant tensors

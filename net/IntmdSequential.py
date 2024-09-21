@@ -1,9 +1,8 @@
-import torch.nn as nn
+import torch
 
-
-class IntermediateSequential(nn.Sequential):
+class IntermediateSequential(torch.nn.Sequential):
     def __init__(self, *args, return_intermediate=False):
-        super().__init__(*args)
+        super(IntermediateSequential,self).__init__(*args)
         self.return_intermediate = return_intermediate
 
     def forward(self, input): 

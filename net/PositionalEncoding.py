@@ -1,9 +1,8 @@
 import torch
-import torch.nn as nn
 
 
 #实现了位置编码
-class FixedPositionalEncoding(nn.Module):
+class FixedPositionalEncoding(torch.nn.Module):
     def __init__(self, embedding_dim, max_length=512):
         super(FixedPositionalEncoding, self).__init__()
 
@@ -23,7 +22,7 @@ class FixedPositionalEncoding(nn.Module):
         return x
 
 
-class LearnedPositionalEncoding(nn.Module):
+class LearnedPositionalEncoding(torch.nn.Module):
     def __init__(self, max_position_embeddings, embedding_dim, seq_length):
         super(LearnedPositionalEncoding, self).__init__()
 

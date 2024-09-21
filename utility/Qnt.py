@@ -1,6 +1,5 @@
 import torch
-import numpy as np
-import itertools
+
 """
 Qnt: Quantization Methods. this collection of methods, compute the quantization tables  for RGB, and LAB color space. 
 These methods are organized in a way that each bin is recognized by its central value.

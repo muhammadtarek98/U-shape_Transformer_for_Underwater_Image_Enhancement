@@ -1,5 +1,7 @@
 import torch
-from utility import ptcolor as ptcolor
+import ptcolor as ptcolor
+import matplotlib.pyplot as plt
+
 """
 Relu_Softmax_LAB: This collections of methods compute the softmax (on channel L or AB) using the principles:
 high value for taller bins and very low values for shorter bins ( almost 0 everywhere).
@@ -27,7 +29,6 @@ def softhist_AB(lab, vmax, bins):
 
 if __name__ == "__main__":
 
-    import matplotlib.pyplot as plt
 
     im = torch.randn([1,3,64,64])
     lab = ptcolor.rgb2lab(im)

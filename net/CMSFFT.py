@@ -3,16 +3,11 @@
 # @File    : CMSFFT.py
 # coding=utf-8
 # Design based on the CTrans
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import copy
 import logging
 import math
 import torch
-import torch.nn as nn
 import numpy as np
-from torch.nn import Dropout, Softmax, Conv2d, LayerNorm
 from torch.nn.modules.utils import _pair
 
 
@@ -24,7 +19,7 @@ from torch.nn.modules.utils import _pair
 
 
 #线性编码
-class Channel_Embeddings(nn.Module):
+class Channel_Embeddings(torch.nn.Module):
     """Construct the embeddings from patch, position embeddings.
     """
     def __init__(self, patchsize, img_size, in_channels):
@@ -33,12 +28,12 @@ class Channel_Embeddings(nn.Module):
         patch_size = _pair(patchsize)
         n_patches = (img_size[0] // patch_size[0]) * (img_size[1] // patch_size[1])
 
-        self.patch_embeddings = Conv2d(in_channels=in_channels,
+        self.patch_embeddings = torch.nn.Conv2d(in_channels=in_channels,
                                        out_channels=in_channels,
                                        kernel_size=patch_size,
                                        stride=patch_size)
-        self.position_embeddings = nn.Parameter(torch.zeros(1, n_patches, in_channels))
-        self.dropout = Dropout(0.1)
+        self.position_embeddings = torch.nn.Parameter(torch.zeros(1, n_patches, in_channels))
+        self.dropout = torch.nn.Dropout(0.1)
 
     def forward(self, x):
         if x is None:
@@ -52,16 +47,16 @@ class Channel_Embeddings(nn.Module):
 
 
 #特征重组
-class Reconstruct(nn.Module):
+class Reconstruct(torch.nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, scale_factor):
         super(Reconstruct, self).__init__()
         if kernel_size == 3:
             padding = 1
         else:
             padding = 0
-        self.conv = nn.Conv2d(in_channels, out_channels,kernel_size=kernel_size, padding=padding)
-        self.norm = nn.BatchNorm2d(out_channels)
-        self.activation = nn.ReLU(inplace=True)
+        self.conv = torch.nn.Conv2d(in_channels, out_channels,kernel_size=kernel_size, padding=padding)
+        self.norm = torch.nn.BatchNorm2d(out_channels)
+        self.activation = torch.nn.ReLU(inplace=True)
         self.scale_factor = scale_factor
 
     def forward(self, x):
@@ -73,14 +68,14 @@ class Reconstruct(nn.Module):
         h, w = int(np.sqrt(n_patch)), int(np.sqrt(n_patch))
         x = x.permute(0, 2, 1)
         x = x.contiguous().view(B, hidden, h, w)
-        x = nn.Upsample(scale_factor=self.scale_factor)(x)
+        x = torch.nn.Upsample(scale_factor=self.scale_factor)(x)
 
         out = self.conv(x)
         out = self.norm(out)
         out = self.activation(out)
         return out
 
-class Attention_org(nn.Module):
+class Attention_org(torch.nn.Module):
     def __init__(self, vis,channel_num, KV_size=480, num_heads=4):
         super(Attention_org, self).__init__()
         self.vis = vis
@@ -88,20 +83,20 @@ class Attention_org(nn.Module):
         self.channel_num = channel_num
         self.num_attention_heads = num_heads
 
-        self.query1 = nn.ModuleList()
-        self.query2 = nn.ModuleList()
-        self.query3 = nn.ModuleList()
-        self.query4 = nn.ModuleList()
-        self.key = nn.ModuleList()
-        self.value = nn.ModuleList()
+        self.query1 = torch.nn.ModuleList()
+        self.query2 = torch.nn.ModuleList()
+        self.query3 = torch.nn.ModuleList()
+        self.query4 = torch.nn.ModuleList()
+        self.key = torch.nn.ModuleList()
+        self.value = torch.nn.ModuleList()
 
         for _ in range(num_heads):
-            query1 = nn.Linear(channel_num[0], channel_num[0], bias=False)
-            query2 = nn.Linear(channel_num[1], channel_num[1], bias=False)
-            query3 = nn.Linear(channel_num[2], channel_num[2], bias=False)
-            query4 = nn.Linear(channel_num[3], channel_num[3], bias=False)
-            key = nn.Linear( self.KV_size,  self.KV_size, bias=False)
-            value = nn.Linear(self.KV_size,  self.KV_size, bias=False)
+            query1 = torch.nn.Linear(channel_num[0], channel_num[0], bias=False)
+            query2 = torch.nn.Linear(channel_num[1], channel_num[1], bias=False)
+            query3 = torch.nn.Linear(channel_num[2], channel_num[2], bias=False)
+            query4 = torch.nn.Linear(channel_num[3], channel_num[3], bias=False)
+            key = torch.nn.Linear( self.KV_size,  self.KV_size, bias=False)
+            value = torch.nn.Linear(self.KV_size,  self.KV_size, bias=False)
             #把所有的值都重新复制一遍，deepcopy为深复制，完全脱离原来的值，即将被复制对象完全再复制一遍作为独立的新个体单独存在
             self.query1.append(copy.deepcopy(query1))
             self.query2.append(copy.deepcopy(query2))
@@ -109,17 +104,14 @@ class Attention_org(nn.Module):
             self.query4.append(copy.deepcopy(query4))
             self.key.append(copy.deepcopy(key))
             self.value.append(copy.deepcopy(value))
-        self.psi = nn.InstanceNorm2d(self.num_attention_heads)
-        self.softmax = Softmax(dim=3)
-        self.out1 = nn.Linear(channel_num[0], channel_num[0], bias=False)
-        self.out2 = nn.Linear(channel_num[1], channel_num[1], bias=False)
-        self.out3 = nn.Linear(channel_num[2], channel_num[2], bias=False)
-        self.out4 = nn.Linear(channel_num[3], channel_num[3], bias=False)
-        self.attn_dropout = Dropout(0.1)
-        self.proj_dropout = Dropout(0.1)
-
-
-
+        self.psi = torch.nn.InstanceNorm2d(self.num_attention_heads)
+        self.softmax = torch.nn.Softmax(dim=3)
+        self.out1 = torch.nn.Linear(channel_num[0], channel_num[0], bias=False)
+        self.out2 = torch.nn.Linear(channel_num[1], channel_num[1], bias=False)
+        self.out3 = torch.nn.Linear(channel_num[2], channel_num[2], bias=False)
+        self.out4 = torch.nn.Linear(channel_num[3], channel_num[3], bias=False)
+        self.attn_dropout = torch.nn.Dropout(0.1)
+        self.proj_dropout = torch.nn.Dropout(0.1)
     def forward(self, emb1,emb2,emb3,emb4, emb_all):
         multi_head_Q1_list = []
         multi_head_Q2_list = []
@@ -220,20 +212,20 @@ class Attention_org(nn.Module):
 
 
 
-class Mlp(nn.Module):
+class Mlp(torch.nn.Module):
     def __init__(self, in_channel, mlp_channel):
         super(Mlp, self).__init__()
-        self.fc1 = nn.Linear(in_channel, mlp_channel)
-        self.fc2 = nn.Linear(mlp_channel, in_channel)
-        self.act_fn = nn.GELU()
-        self.dropout = Dropout(0.0)
+        self.fc1 = torch.nn.Linear(in_channel, mlp_channel)
+        self.fc2 = torch.nn.Linear(mlp_channel, in_channel)
+        self.act_fn = torch.nn.GELU()
+        self.dropout = torch.nn.Dropout(0.0)
         self._init_weights()
 
     def _init_weights(self):
-        nn.init.xavier_uniform_(self.fc1.weight)
-        nn.init.xavier_uniform_(self.fc2.weight)
-        nn.init.normal_(self.fc1.bias, std=1e-6)
-        nn.init.normal_(self.fc2.bias, std=1e-6)
+        torch.nn.init.xavier_uniform_(self.fc1.weight)
+        torch.nn.init.xavier_uniform_(self.fc2.weight)
+        torch.nn.init.normal_(self.fc1.bias, std=1e-6)
+        torch.nn.init.normal_(self.fc2.bias, std=1e-6)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -243,21 +235,21 @@ class Mlp(nn.Module):
         x = self.dropout(x)
         return x
 
-class Block_ViT(nn.Module):
+class Block_ViT(torch.nn.Module):
     def __init__(self, vis, channel_num, expand_ratio=4,KV_size=480):
         super(Block_ViT, self).__init__()
         expand_ratio = 4
-        self.attn_norm1 = LayerNorm(channel_num[0],eps=1e-6)
-        self.attn_norm2 = LayerNorm(channel_num[1],eps=1e-6)
-        self.attn_norm3 = LayerNorm(channel_num[2],eps=1e-6)
-        self.attn_norm4 = LayerNorm(channel_num[3],eps=1e-6)
-        self.attn_norm =  LayerNorm(KV_size,eps=1e-6)
+        self.attn_norm1 = torch.nn.LayerNorm(channel_num[0],eps=1e-6)
+        self.attn_norm2 = torch.nn.LayerNorm(channel_num[1],eps=1e-6)
+        self.attn_norm3 = torch.nn.LayerNorm(channel_num[2],eps=1e-6)
+        self.attn_norm4 = torch.nn.LayerNorm(channel_num[3],eps=1e-6)
+        self.attn_norm =  torch.nn.LayerNorm(KV_size,eps=1e-6)
         self.channel_attn = Attention_org(vis, channel_num)
 
-        self.ffn_norm1 = LayerNorm(channel_num[0],eps=1e-6)
-        self.ffn_norm2 = LayerNorm(channel_num[1],eps=1e-6)
-        self.ffn_norm3 = LayerNorm(channel_num[2],eps=1e-6)
-        self.ffn_norm4 = LayerNorm(channel_num[3],eps=1e-6)
+        self.ffn_norm1 = torch.nn.LayerNorm(channel_num[0],eps=1e-6)
+        self.ffn_norm2 = torch.nn.LayerNorm(channel_num[1],eps=1e-6)
+        self.ffn_norm3 = torch.nn.LayerNorm(channel_num[2],eps=1e-6)
+        self.ffn_norm4 = torch.nn.LayerNorm(channel_num[3],eps=1e-6)
         self.ffn1 = Mlp(channel_num[0],channel_num[0]*expand_ratio)
         self.ffn2 = Mlp(channel_num[1],channel_num[1]*expand_ratio)
         self.ffn3 = Mlp(channel_num[2],channel_num[2]*expand_ratio)
@@ -310,15 +302,15 @@ class Block_ViT(nn.Module):
         return x1, x2, x3, x4, weights
 
 
-class Encoder(nn.Module):
+class Encoder(torch.nn.Module):
     def __init__(self, vis, channel_num, num_layers=4):
         super(Encoder, self).__init__()
         self.vis = vis
-        self.layer = nn.ModuleList()
-        self.encoder_norm1 = LayerNorm(channel_num[0],eps=1e-6)
-        self.encoder_norm2 = LayerNorm(channel_num[1],eps=1e-6)
-        self.encoder_norm3 = LayerNorm(channel_num[2],eps=1e-6)
-        self.encoder_norm4 = LayerNorm(channel_num[3],eps=1e-6)
+        self.layer = torch.nn.ModuleList()
+        self.encoder_norm1 = torch.nn.LayerNorm(channel_num[0],eps=1e-6)
+        self.encoder_norm2 = torch.nn.LayerNorm(channel_num[1],eps=1e-6)
+        self.encoder_norm3 = torch.nn.LayerNorm(channel_num[2],eps=1e-6)
+        self.encoder_norm4 = torch.nn.LayerNorm(channel_num[3],eps=1e-6)
         for _ in range(num_layers):
             layer = Block_ViT(vis, channel_num)
             self.layer.append(copy.deepcopy(layer))
@@ -336,9 +328,9 @@ class Encoder(nn.Module):
         return emb1,emb2,emb3,emb4, attn_weights
 
 
-class ChannelTransformer(nn.Module):
+class ChannelTransformer(torch.nn.Module):
     def __init__(self,  vis=False, img_size=256, channel_num=[64, 128, 256, 512], patchSize=[32, 16, 8, 4]):
-        super().__init__()
+        super(ChannelTransformer,self).__init__()
 
         self.patchSize_1 = patchSize[0]
         self.patchSize_2 = patchSize[1]
@@ -374,4 +366,3 @@ class ChannelTransformer(nn.Module):
         x4 = x4 + en4  if en4 is not None else None
 
         return x1, x2, x3, x4, attn_weights
-
